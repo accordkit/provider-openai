@@ -1,7 +1,7 @@
 /**
  * Utilities for coercing OpenAI chat content into normalized AccordKit fields.
  */
-import type { MessagePayload } from './payloads';
+import type { MessagePayload } from './payloads.js';
 
 export type NormalizedContent = {
   content: string;

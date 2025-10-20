@@ -1,15 +1,15 @@
 import { newTraceCtx } from '@accordkit/core';
 import { Tracer } from '@accordkit/tracer';
 
-import { emitCompletionArtifacts, emitPromptMessages } from './internal/emitters';
-import { resolveOptions } from './internal/options';
-import { serializeError, summarizeResult, toErrorMessage } from './internal/results';
-import { handleStreamResult, isStreamLike } from './internal/stream';
-import { getExistingProxy, markProxy } from './internal/wrap';
+import { emitCompletionArtifacts, emitPromptMessages } from './internal/emitters.js';
+import { resolveOptions } from './internal/options.js';
+import { serializeError, summarizeResult, toErrorMessage } from './internal/results.js';
+import { handleStreamResult, isStreamLike } from './internal/stream.js';
+import { getExistingProxy, markProxy } from './internal/wrap.js';
 
-import type { OpenAIAdapterOptions, ResolvedOpenAIOptions } from './internal/options';
-import type { ToolResultPayload } from './internal/payloads';
-import type { ChatCompletionCreateParams, ChatCompletionLike } from './internal/types';
+import type { OpenAIAdapterOptions, ResolvedOpenAIOptions } from './internal/options.js';
+import type { ToolResultPayload } from './internal/payloads.js';
+import type { ChatCompletionCreateParams, ChatCompletionLike } from './internal/types.js';
 import type { TraceContext } from '@accordkit/core';
 import type OpenAI from 'openai';
 

@@ -1,12 +1,12 @@
 /**
  * Streaming-aware helpers for converting OpenAI responses into AccordKit events.
  */
-import { emitCompletionArtifacts } from './emitters';
-import { summarizeResult, serializeError, toErrorMessage } from './results';
+import { emitCompletionArtifacts } from './emitters.js';
+import { summarizeResult, serializeError, toErrorMessage } from './results.js';
 
-import type { ResolvedOpenAIOptions } from './options';
-import type { ToolResultPayload } from './payloads';
-import type { ChatCompletionLike, StreamLike } from './types';
+import type { ResolvedOpenAIOptions } from './options.js';
+import type { ToolResultPayload } from './payloads.js';
+import type { ChatCompletionLike, StreamLike } from './types.js';
 import type { TraceContext } from '@accordkit/core';
 import type { Tracer } from '@accordkit/tracer';
 
