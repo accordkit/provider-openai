@@ -1,1 +1,1 @@
-export * from './openaiAdapter.js';
+export * from './openaiAdapter';

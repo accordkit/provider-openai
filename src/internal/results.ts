@@ -1,7 +1,7 @@
 /**
  * Utilities for summarizing OpenAI responses and errors for AccordKit events.
  */
-import type { ChatCompletionLike } from './types.js';
+import type { ChatCompletionLike } from './types';
 
 /**
  * Produce a compact summary of an OpenAI chat completion for tool_result payloads.

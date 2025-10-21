@@ -7,11 +7,11 @@ import {
   safeParseJSON,
   toMessageRole,
   type NormalizedContent,
-} from './normalize.js';
-import { MessagePayload, ToolCallPayload, UsagePayload } from './payloads.js';
+} from './normalize';
+import { type MessagePayload, type ToolCallPayload, type UsagePayload } from './payloads';
 
-import type { ResolvedOpenAIOptions } from './options.js';
-import type { ChatCompletionChoice, ChatCompletionLike, ChatMessage } from './types.js';
+import type { ResolvedOpenAIOptions } from './options';
+import type { ChatCompletionChoice, ChatCompletionLike, ChatMessage } from './types';
 import type { TraceContext } from '@accordkit/core';
 import type { Tracer } from '@accordkit/tracer';
 
