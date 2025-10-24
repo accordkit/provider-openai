@@ -82,7 +82,7 @@ export function withOpenAI<T extends OpenAI>(
                   );
 
                   if (isStreamLike(result)) {
-                    handleStreamResult({
+                    return handleStreamResult({
                       stream: result,
                       tracer,
                       opts: resolved,
@@ -91,7 +91,6 @@ export function withOpenAI<T extends OpenAI>(
                       spanToken,
                       start,
                     });
-                    return result;
                   }
 
                   const completion = result as ChatCompletionLike;

@@ -1,5 +1,14 @@
 # @accordkit/provider-openai
 
+[![Part of AccordKit](https://img.shields.io/badge/AccordKit-ecosystem-00cc88?style=flat-square)](https://github.com/accordkit)
+
+> **Part of the [AccordKit](https://github.com/accordkit) ecosystem** —  
+> an open, AI-agnostic tracing SDK for LLM-powered and ChatGPT-interoperable applications.  
+> AccordKit gives developers local-first observability: **no vendor lock-in, no opaque dashboards**, just clean event streams and tools that work anywhere.
+
+[🌍 Positioning Map →](https://github.com/accordkit/docs/blob/main/assets/accordkit_positioning_map.png)
+
+
 > AccordKit adapter that instruments the official OpenAI SDK and emits normalized
 > tracing events (`message`, `tool_call`, `usage`, `tool_result`, `span`) through
 > an AccordKit [`Tracer`](https://github.com/accordkit/tracer).

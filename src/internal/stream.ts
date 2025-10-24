@@ -1,6 +1,8 @@
 /**
  * Streaming-aware helpers for converting OpenAI responses into AccordKit events.
  */
+import { ChatCompletionStream } from 'openai/resources/beta/chat/completions';
+
 import { emitCompletionArtifacts } from './emitters';
 import { summarizeResult, serializeError, toErrorMessage } from './results';
 
@@ -14,11 +16,10 @@ import type { Tracer } from '@accordkit/tracer';
  * Narrow an arbitrary value to the OpenAI `Stream` shape.
  */
 export function isStreamLike(value: unknown): value is StreamLike {
-  if (!value || typeof value !== 'object' || !('finalChatCompletion' in value)) {
-    return false;
-  }
-  const candidate = value as { finalChatCompletion?: unknown };
-  return typeof candidate.finalChatCompletion === 'function';
+  if (!value || typeof value !== 'object') return false;
+  const candidate = value as StreamLike;
+  if (typeof candidate.finalChatCompletion === 'function') return true;
+  return typeof candidate.tee === 'function' && typeof candidate.toReadableStream === 'function';
 }
 
 interface StreamArgs {
@@ -42,7 +43,7 @@ export function handleStreamResult({
   model,
   spanToken,
   start,
-}: StreamArgs): void {
+}: StreamArgs): StreamLike {
   const finishOk = async (completion: ChatCompletionLike | undefined) => {
     await emitCompletionArtifacts({ tracer, opts, completion, ctx, model });
 
@@ -94,19 +95,75 @@ export function handleStreamResult({
   };
 
   try {
-    if (typeof stream.finalChatCompletion === 'function') {
-      const result = stream.finalChatCompletion();
-      if (result && typeof (result as Promise<unknown>).then === 'function') {
-        (result as Promise<ChatCompletionLike | undefined>)
-          .then(finishOk)
-          .catch(finishErr);
-      } else {
-        void finishOk(undefined);
-      }
+    const { streamForUser, finalPromise } = resolveFinalCompletion(stream);
+
+    if (finalPromise) {
+      void finalPromise.then(finishOk).catch(finishErr);
     } else {
       void finishOk(undefined);
     }
+
+    return streamForUser;
   } catch (err) {
     void finishErr(err);
+  }
+
+  return stream;
+}
+
+function resolveFinalCompletion(stream: StreamLike): {
+  streamForUser: StreamLike;
+  finalPromise: Promise<ChatCompletionLike | undefined> | null;
+} {
+  if (typeof stream.finalChatCompletion === 'function') {
+    try {
+      return { streamForUser: stream, finalPromise: Promise.resolve(stream.finalChatCompletion()) };
+    } catch {
+      return { streamForUser: stream, finalPromise: null };
+    }
+  }
+
+  if (typeof stream.tee === 'function' && typeof stream.toReadableStream === 'function') {
+    try {
+      const [observer, userStream] = stream.tee();
+      const readable = observer?.toReadableStream?.();
+
+      if (readable) {
+        const runner = ChatCompletionStream.fromReadableStream(readable);
+        const finalPromise = runner.finalChatCompletion() as Promise<
+          ChatCompletionLike | undefined
+        >;
+
+        const finalFn = () => finalPromise;
+        defineFinalCompletion(observer, finalFn);
+        defineFinalCompletion(userStream, finalFn);
+
+        return {
+          streamForUser: userStream,
+          finalPromise,
+        };
+      }
+    } catch {
+      // fall through to fallback
+    }
+  }
+
+  return { streamForUser: stream, finalPromise: null };
+}
+
+function defineFinalCompletion(
+  stream: StreamLike | undefined,
+  factory: () => Promise<ChatCompletionLike | undefined>,
+) {
+  if (!stream || typeof stream !== 'object') return;
+  try {
+    Object.defineProperty(stream, 'finalChatCompletion', {
+      value: factory,
+      configurable: true,
+      enumerable: false,
+      writable: false,
+    });
+  } catch {
+    // Ignore define failures (e.g., frozen objects)
   }
 }

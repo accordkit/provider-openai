@@ -2,6 +2,8 @@
  * Lightweight type aliases that describe the OpenAI payload shapes we consume.
  */
 
+import type { ReadableStream } from 'openai/_shims/index';
+
 export interface ChatMessage {
   role?: string;
   content?: unknown;
@@ -44,7 +46,9 @@ export interface ChatCompletionLike {
 }
 
 export interface StreamLike {
-  finalChatCompletion?: () => Promise<ChatCompletionLike>;
+  finalChatCompletion?: () => Promise<ChatCompletionLike | undefined>;
+  tee?: () => [StreamLike, StreamLike];
+  toReadableStream?: () => ReadableStream | undefined;
 }
 
 export interface ChatCompletionCreateParams {
