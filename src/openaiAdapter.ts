@@ -1,5 +1,4 @@
-import { newTraceCtx } from '@accordkit/core';
-import { Tracer } from '@accordkit/tracer';
+import { Tracer, newTraceCtx, type TraceContext } from '@accordkit/tracer';
 
 import { emitCompletionArtifacts, emitPromptMessages } from './internal/emitters';
 import { resolveOptions } from './internal/options';
@@ -10,7 +9,6 @@ import { getExistingProxy, markProxy } from './internal/wrap';
 import type { OpenAIAdapterOptions, ResolvedOpenAIOptions } from './internal/options';
 import type { ToolResultPayload } from './internal/payloads';
 import type { ChatCompletionCreateParams, ChatCompletionLike } from './internal/types';
-import type { TraceContext } from '@accordkit/core';
 import type OpenAI from 'openai';
 
 /**
@@ -82,7 +80,7 @@ export function withOpenAI<T extends OpenAI>(
                   );
 
                   if (isStreamLike(result)) {
-                    return handleStreamResult({
+                    handleStreamResult({
                       stream: result,
                       tracer,
                       opts: resolved,
@@ -91,6 +89,7 @@ export function withOpenAI<T extends OpenAI>(
                       spanToken,
                       start,
                     });
+                    return result;
                   }
 
                   const completion = result as ChatCompletionLike;

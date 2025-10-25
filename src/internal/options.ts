@@ -1,7 +1,7 @@
 /**
  * Option resolution utilities for the OpenAI adapter.
  */
-import type { Provider } from '@accordkit/core';
+import type { Provider } from '@accordkit/tracer';
 
 /**
  * Configuration knobs for {@link withOpenAI}, allowing callers to tune which

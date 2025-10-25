@@ -9,8 +9,7 @@ import { summarizeResult, serializeError, toErrorMessage } from './results';
 import type { ResolvedOpenAIOptions } from './options';
 import type { ToolResultPayload } from './payloads';
 import type { ChatCompletionLike, StreamLike } from './types';
-import type { TraceContext } from '@accordkit/core';
-import type { Tracer } from '@accordkit/tracer';
+import type { Tracer, TraceContext } from '@accordkit/tracer';
 
 /**
  * Narrow an arbitrary value to the OpenAI `Stream` shape.

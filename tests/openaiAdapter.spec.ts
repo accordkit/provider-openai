@@ -1,9 +1,8 @@
-import { Tracer } from '@accordkit/tracer';
+import { Tracer, type Sink, type TracerEvent } from '@accordkit/tracer';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { withOpenAI } from '../src/openaiAdapter';
 
-import type { TracerEvent, Sink } from '@accordkit/core';
 import type { OpenAI } from 'openai';
 import type { ChatCompletionCreateParams } from 'openai/resources/chat/completions';
 

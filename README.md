@@ -23,15 +23,14 @@
 ## Installation
 
 ```bash
-pnpm add @accordkit/core @accordkit/tracer @accordkit/provider-openai openai
+pnpm add @accordkit/tracer @accordkit/provider-openai openai
 ```
 
 ## Quickstart
 
 ```ts
 import OpenAI from 'openai';
-import { Tracer } from '@accordkit/tracer';
-import { FileSink } from '@accordkit/core';
+import { FileSink, Tracer } from '@accordkit/tracer';
 import { withOpenAI } from '@accordkit/provider-openai';
 
 const tracer = new Tracer({ sink: new FileSink() });

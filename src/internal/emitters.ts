@@ -12,7 +12,7 @@ import { type MessagePayload, type ToolCallPayload, type UsagePayload } from './
 
 import type { ResolvedOpenAIOptions } from './options';
 import type { ChatCompletionChoice, ChatCompletionLike, ChatMessage } from './types';
-import type { TraceContext } from '@accordkit/core';
+import type { TraceContext } from '@accordkit/tracer';
 import type { Tracer } from '@accordkit/tracer';
 
 interface PromptArgs {

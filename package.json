@@ -44,7 +44,6 @@
     "openai": "^4 || ^5"
   },
   "dependencies": {
-    "@accordkit/core": "workspace:*",
     "@accordkit/tracer": "workspace:*"
   },
   "devDependencies": {
