@@ -1,5 +1,8 @@
 /**
- * Utility payload aliases derived from the AccordKit tracer methods.
+ * Strongly typed aliases for the payloads accepted by the AccordKit tracer.
+ *
+ * Re-exporting these shapes keeps the adapter aligned with upstream tracer
+ * typings without duplicating the event definitions locally.
  */
 import type { Tracer } from '@accordkit/tracer';
 

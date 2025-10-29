@@ -17,6 +17,10 @@ const MESSAGE_ROLES: ReadonlyArray<MessagePayload['role']> = [
 
 /**
  * Ensure an arbitrary role value aligns with the AccordKit message role enum.
+ *
+ * @param value Role value provided by the OpenAI SDK.
+ * @param fallback Role to use when the value is missing or invalid.
+ * @returns A role accepted by AccordKit.
  */
 export function toMessageRole(
   value: unknown,
@@ -29,6 +33,9 @@ export function toMessageRole(
 
 /**
  * Normalize OpenAI chat content into a string + format pair that fits AccordKit.
+ *
+ * @param content Arbitrary content supplied by the OpenAI SDK.
+ * @returns Normalized content paired with a format hint.
  */
 export function normalizeContent(content: unknown): NormalizedContent {
   if (typeof content === 'string') {
@@ -60,6 +67,9 @@ export function normalizeContent(content: unknown): NormalizedContent {
 
 /**
  * Parse tool arguments encoded as JSON, falling back to the original string.
+ *
+ * @param value Raw `function.arguments` string from OpenAI.
+ * @returns Parsed JSON or the original input when parsing fails.
  */
 export function safeParseJSON(value: unknown): unknown {
   if (typeof value !== 'string') return value ?? null;

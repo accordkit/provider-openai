@@ -1,5 +1,8 @@
 /**
  * Helpers for transforming OpenAI payloads into AccordKit tracing events.
+ *
+ * Each function focuses on translating a specific OpenAI response shape into the normalized
+ * AccordKit event contracts so downstream tooling receives consistent metadata.
  */
 
 import {
@@ -8,7 +11,13 @@ import {
   toMessageRole,
   type NormalizedContent,
 } from './normalize';
-import { type MessagePayload, type ToolCallPayload, type UsagePayload } from './payloads';
+import {
+  type MessagePayload,
+  type ToolCallPayload,
+  type ToolResultPayload,
+  type UsagePayload,
+} from './payloads';
+import { serializeError, summarizeResult } from './results';
 
 import type { ResolvedOpenAIOptions } from './options';
 import type { ChatCompletionChoice, ChatCompletionLike, ChatMessage } from './types';
@@ -25,6 +34,12 @@ interface PromptArgs {
 
 /**
  * Emit `message` events for input prompts prior to invoking the OpenAI API.
+ *
+ * @param tracer AccordKit tracer used for emission.
+ * @param opts Resolved adapter configuration.
+ * @param messages Prompt messages supplied to the OpenAI request.
+ * @param ctx Trace context associated with the request span.
+ * @param model Optional model identifier already known for the request.
  */
 export async function emitPromptMessages({
   tracer,
@@ -59,6 +74,12 @@ interface CompletionArgs {
 
 /**
  * Emit normalized events derived from a chat completion response.
+ *
+ * @param tracer AccordKit tracer used for emission.
+ * @param opts Resolved adapter configuration.
+ * @param completion Completion payload returned by the OpenAI SDK.
+ * @param ctx Trace context associated with the request span.
+ * @param model Optional model hint associated with the request.
  */
 export async function emitCompletionArtifacts({
   tracer,
@@ -199,4 +220,173 @@ function buildMessagePayload({
   if (name) payload.$ext = { name };
 
   return payload;
+}
+
+interface EmitSuccessArgs {
+  tracer: Tracer;
+  opts: ResolvedOpenAIOptions;
+  completion: ChatCompletionLike;
+  ctx: TraceContext;
+  model?: string;
+  latencyMs: number;
+}
+
+/**
+ * Emit a successful `tool_result` event summarizing the completion payload.
+ *
+ * @param tracer AccordKit tracer used for emission.
+ * @param opts Resolved adapter configuration.
+ * @param completion Completion payload returned by the OpenAI SDK.
+ * @param ctx Trace context associated with the request span.
+ * @param model Optional model hint associated with the request.
+ * @param latencyMs Measured request latency in milliseconds.
+ */
+export async function emitSuccessResult({
+  tracer,
+  opts,
+  completion,
+  ctx,
+  model,
+  latencyMs,
+}: EmitSuccessArgs): Promise<void> {
+  if (!opts.emitToolResults) return;
+
+  const payload: ToolResultPayload = {
+    provider: opts.provider,
+    model: completion.model ?? model,
+    requestId: completion.id,
+    tool: opts.operationName,
+    output: summarizeResult(completion),
+    ok: true,
+    latencyMs,
+    ctx,
+  };
+  await tracer.toolResult(payload);
+}
+
+interface EmitFailureArgs {
+  tracer: Tracer;
+  opts: ResolvedOpenAIOptions;
+  model?: string;
+  ctx: TraceContext;
+  latencyMs: number;
+  error: unknown;
+}
+
+/**
+ * Emit a failed `tool_result` event describing the thrown error.
+ *
+ * @param tracer AccordKit tracer used for emission.
+ * @param opts Resolved adapter configuration.
+ * @param model Optional model hint associated with the request.
+ * @param ctx Trace context associated with the request span.
+ * @param latencyMs Measured request latency in milliseconds.
+ * @param error The error thrown by the OpenAI SDK or user code.
+ */
+export async function emitFailureResult({
+  tracer,
+  opts,
+  model,
+  ctx,
+  latencyMs,
+  error,
+}: EmitFailureArgs): Promise<void> {
+  if (!opts.emitToolResults) return;
+
+  const payload: ToolResultPayload = {
+    provider: opts.provider,
+    model,
+    tool: opts.operationName,
+    output: serializeError(error),
+    ok: false,
+    latencyMs,
+    ctx,
+  };
+  await tracer.toolResult(payload);
+}
+
+interface EmitAuxiliarySuccessArgs {
+  tracer: Tracer;
+  opts: ResolvedOpenAIOptions;
+  model?: string;
+  ctx: TraceContext;
+  latencyMs: number;
+  tool: string;
+  output: unknown;
+}
+
+/**
+ * Emit a successful `tool_result` for auxiliary OpenAI endpoints (responses, images, audio).
+ *
+ * @param tracer AccordKit tracer used for emission.
+ * @param opts Resolved adapter configuration.
+ * @param tool Logical operation name (e.g., `openai.images.generate`).
+ * @param model Optional model hint associated with the request.
+ * @param ctx Trace context associated with the request span.
+ * @param latencyMs Measured request latency in milliseconds.
+ * @param output Normalized payload to attach to the event.
+ */
+export async function emitAuxiliarySuccess({
+  tracer,
+  opts,
+  tool,
+  model,
+  ctx,
+  latencyMs,
+  output,
+}: EmitAuxiliarySuccessArgs): Promise<void> {
+  if (!opts.emitToolResults) return;
+
+  await tracer.toolResult({
+    provider: opts.provider,
+    model,
+    tool,
+    output,
+    ok: true,
+    latencyMs,
+    ctx,
+  });
+}
+
+interface EmitAuxiliaryFailureArgs {
+  tracer: Tracer;
+  opts: ResolvedOpenAIOptions;
+  model?: string;
+  ctx: TraceContext;
+  latencyMs: number;
+  tool: string;
+  error: unknown;
+}
+
+/**
+ * Emit a failed `tool_result` for auxiliary OpenAI endpoints (responses, images, audio).
+ *
+ * @param tracer AccordKit tracer used for emission.
+ * @param opts Resolved adapter configuration.
+ * @param tool Logical operation name (e.g., `openai.images.generate`).
+ * @param model Optional model hint associated with the request.
+ * @param ctx Trace context associated with the request span.
+ * @param latencyMs Measured request latency in milliseconds.
+ * @param error The error thrown by the OpenAI SDK or user code.
+ */
+export async function emitAuxiliaryFailure({
+  tracer,
+  opts,
+  tool,
+  model,
+  ctx,
+  latencyMs,
+  error,
+}: EmitAuxiliaryFailureArgs): Promise<void> {
+  if (!opts.emitToolResults) return;
+
+  await tracer.toolResult({
+    provider: opts.provider,
+    model,
+    tool,
+    output: serializeError(error),
+    ok: false,
+    latencyMs,
+    ctx,
+  });
 }

@@ -1,13 +1,23 @@
 /**
  * Option resolution utilities for the OpenAI adapter.
+ *
+ * The adapter exposes a small set of switches that control which OpenAI APIs are wrapped
+ * and which AccordKit events are emitted. These helpers consolidate the runtime defaults
+ * in one place so consumers and tests can rely on consistent behaviour.
  */
 import type { Provider } from '@accordkit/tracer';
 
 /**
- * Configuration knobs for {@link withOpenAI}, allowing callers to tune which
- * AccordKit events the adapter emits and how they are labeled.
+ * Configuration knobs for {@link withOpenAI}, allowing callers to tune which AccordKit events
+ * the adapter emits and how they are labeled.
  */
 export interface OpenAIAdapterOptions {
+  /** Enable instrumentation for the Responses API (responses.create/stream). */
+  enableResponsesApi?: boolean;
+  /** Enable instrumentation for Images API (images.generate). */
+  enableImagesApi?: boolean;
+  /** Enable instrumentation for Audio API (audio.speech/transcriptions/translations). */
+  enableAudioApi?: boolean;
   /**
    * Provider identifier attached to emitted events. Defaults to `'openai'`.
    * Override if you proxy OpenAI behind another service and want distinct labeling.
@@ -50,7 +60,15 @@ export interface OpenAIAdapterOptions {
   emitSpan?: boolean;
 }
 
+/**
+ * Fully resolved configuration with defaults applied. Keeping this separate from the public
+ * interface simplifies option handling and provides a single source of truth for downstream
+ * helpers that expect booleans.
+ */
 export interface ResolvedOpenAIOptions {
+  enableResponsesApi: boolean;
+  enableImagesApi: boolean;
+  enableAudioApi: boolean;
   provider: Provider;
   operationName: string;
   emitPrompts: boolean;
@@ -61,7 +79,13 @@ export interface ResolvedOpenAIOptions {
   emitSpan: boolean;
 }
 
+/**
+ * Default instrumentation strategy used when callers do not supply explicit options.
+ */
 const DEFAULT_OPTIONS: ResolvedOpenAIOptions = {
+  enableResponsesApi: false,
+  enableImagesApi: false,
+  enableAudioApi: false,
   provider: 'openai',
   operationName: 'openai.chat.completions.create',
   emitPrompts: true,
@@ -74,6 +98,9 @@ const DEFAULT_OPTIONS: ResolvedOpenAIOptions = {
 
 /**
  * Merge user-provided options with defaults.
+ *
+ * @param options Partial configuration supplied by the caller.
+ * @returns A concrete configuration object with all switches resolved.
  */
 export function resolveOptions(
   options: OpenAIAdapterOptions | undefined,

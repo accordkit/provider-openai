@@ -12,7 +12,13 @@ import type { ChatCompletionLike, StreamLike } from './types';
 import type { Tracer, TraceContext } from '@accordkit/tracer';
 
 /**
- * Narrow an arbitrary value to the OpenAI `Stream` shape.
+ * Determine whether a value fulfills the OpenAI streaming interface.
+ *
+ * The SDK has evolved over time, so we accept either the `finalChatCompletion` helper
+ * or the lower-level `tee`/`toReadableStream` combination that powers it.
+ *
+ * @param value Candidate value returned from the SDK.
+ * @returns True when the value exposes stream helpers we know how to use.
  */
 export function isStreamLike(value: unknown): value is StreamLike {
   if (!value || typeof value !== 'object') return false;
@@ -33,8 +39,20 @@ interface StreamArgs {
 
 /**
  * Attach completion/result handlers to an OpenAI stream to emit AccordKit events.
+ *
+ * When the stream eventually resolves, the adapter emits completion artifacts, tool results,
+ * and span updates while returning a stream the caller can continue to consume.
+ *
+ * @param stream Original OpenAI stream returned from the SDK.
+ * @param tracer AccordKit tracer that records downstream events.
+ * @param opts Resolved adapter configuration that controls which events fire.
+ * @param ctx Trace context associated with the request.
+ * @param model Model identifier derived from the request parameters, if known.
+ * @param spanToken Optional span token to close once the stream completes.
+ * @param start Timestamp from when the request was initiated.
+ * @returns A stream that mirrors the original while ensuring finalization hooks run.
  */
-export function handleStreamResult({
+export async function handleStreamResult({
   stream,
   tracer,
   opts,
@@ -42,7 +60,7 @@ export function handleStreamResult({
   model,
   spanToken,
   start,
-}: StreamArgs): StreamLike {
+}: StreamArgs): Promise<StreamLike> {
   const finishOk = async (completion: ChatCompletionLike | undefined) => {
     await emitCompletionArtifacts({ tracer, opts, completion, ctx, model });
 
@@ -95,7 +113,6 @@ export function handleStreamResult({
 
   try {
     const { streamForUser, finalPromise } = resolveFinalCompletion(stream);
-
     if (finalPromise) {
       void finalPromise.then(finishOk).catch(finishErr);
     } else {
@@ -110,6 +127,15 @@ export function handleStreamResult({
   return stream;
 }
 
+/**
+ * Prepare a user-facing stream alongside a promise that resolves with the final completion.
+ *
+ * Some SDK variants embed `finalChatCompletion` directly while others require `tee`-ing the
+ * stream and rebuilding the helper. This function hides those differences from callers.
+ *
+ * @param stream Stream returned by the OpenAI SDK.
+ * @returns A pair containing the stream exposed to consumers and an optional final promise.
+ */
 function resolveFinalCompletion(stream: StreamLike): {
   streamForUser: StreamLike;
   finalPromise: Promise<ChatCompletionLike | undefined> | null;
@@ -150,6 +176,14 @@ function resolveFinalCompletion(stream: StreamLike): {
   return { streamForUser: stream, finalPromise: null };
 }
 
+/**
+ * Ensure the provided stream exposes a `finalChatCompletion` helper that resolves once the
+ * stream completes. We prefer defining a hidden property directly but fall back to a proxy
+ * when the object is not extensible.
+ *
+ * @param stream Stream instance to augment.
+ * @param factory Factory returning the promise that resolves to the final completion.
+ */
 function defineFinalCompletion(
   stream: StreamLike | undefined,
   factory: () => Promise<ChatCompletionLike | undefined>,

@@ -5,6 +5,9 @@ import type { ChatCompletionLike } from './types';
 
 /**
  * Produce a compact summary of an OpenAI chat completion for tool_result payloads.
+ *
+ * @param result Completion object returned by the OpenAI SDK.
+ * @returns A reduced snapshot of the completion or `null` when unavailable.
  */
 export function summarizeResult(result: ChatCompletionLike | null | undefined) {
   if (!result) return null;
@@ -23,6 +26,9 @@ export function summarizeResult(result: ChatCompletionLike | null | undefined) {
 
 /**
  * Convert arbitrary thrown values into a structured error representation.
+ *
+ * @param err Unknown value caught from userland or the SDK.
+ * @returns A serializable description suitable for logging.
  */
 export function serializeError(err: unknown) {
   if (err instanceof Error) {
@@ -37,6 +43,9 @@ export function serializeError(err: unknown) {
 
 /**
  * Convert unknown error values into a human-readable string.
+ *
+ * @param err Unknown value caught from userland or the SDK.
+ * @returns A string message best describing the error.
  */
 export function toErrorMessage(err: unknown): string {
   if (err instanceof Error) return err.message;

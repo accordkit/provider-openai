@@ -63,6 +63,9 @@ Returns a proxy that mirrors the OpenAI SDK. Re-wrapping the same client always 
 
 | Option | Default | Description |
 |--------|---------|-------------|
+| `enableResponsesApi` | `false` | Wrap the beta `responses` namespace so `responses.create` emits events that mirror chat completions. |
+| `enableImagesApi` | `false` | Instrument `images.generate` calls to capture latency and success/failure without emitting large binary payloads. |
+| `enableAudioApi` | `false` | Instrument `audio.speech/transcriptions/translations` namespaces. |
 | `provider` | `'openai'` | Provider identifier attached to every event. Override if you proxy the API through a custom service. |
 | `operationName` | `'openai.chat.completions.create'` | Logical operation name that shows up on `tool_result` and `span` events. |
 | `emitPrompts` | `true` | Emit `message` events for system/user prompts before submitting the request. |
@@ -101,7 +104,9 @@ Streaming responses are detected automatically. Events are buffered until
 1. Emits accumulated assistant/tool events.
 2. Emits `usage`, `tool_result`, and `span` events with `attrs.stream = true`.
 
-Ensure your OpenAI SDK version exposes `finalChatCompletion()` (v4+).
+Ensure your OpenAI SDK version exposes `finalChatCompletion()` (v4+). When `enableResponsesApi`
+is set, the adapter coerces `responses.create` output into a chat-like completion so the same
+streaming hooks and event emitters apply.
 
 ## Error Handling
 
@@ -111,6 +116,34 @@ Exceptions thrown by `chat.completions.create` are re-thrown after emitting:
 - A `span` event with `status: 'error'` and the error message in `attrs.error`.
 
 This keeps tracing consistent while preserving native SDK error semantics.
+
+### Optional APIs
+
+Enable extra endpoints while keeping default minimal surface:
+
+```ts
+withOpenAI(openai, tracer, {
+  enableResponsesApi: true,
+  enableImagesApi: true,
+  enableAudioApi: true,
+});
+```
+
+## Emitted events by OpenAI method (per flag)
+
+| OpenAI method                                 | Flag                    | prompts | responses | usage | tool_result | span |
+|-----------------------------------------------|-------------------------|:-------:|:---------:|:----:|:-----------:|:----:|
+| `chat.completions.create`                     | _none_ (always on)      |   ✓     |     ✓     |  ✓   |      ✓      |  ✓   |
+| `chat.completions.create (stream)`            | _none_ (always on)      |   ✓     |  ✓ (final)|  ✓   |      ✓      |  ✓   |
+| `responses.create`                            | `enableResponsesApi`    |   —     |     ✓     |  ✓   |      ✓      |  ✓   |
+| `images.generate`                             | `enableImagesApi`       |   —     |     —     |  —   |      ✓      |  ✓   |
+| `audio.speech.create`                         | `enableAudioApi`        |   —     |     —     |  —   |      ✓      |  ✓   |
+| `audio.transcriptions.create`                 | `enableAudioApi`        |   —     |     —     |  —   |      ✓      |  ✓   |
+| `audio.translations.create`                   | `enableAudioApi`        |   —     |     —     |  —   |      ✓      |  ✓   |
+
+**Notes**  
+- For chat streaming we emit **final** artifacts after the stream resolves. Partial chunk emission is currently **off** by default.
+- `images`/`audio` endpoints intentionally avoid attaching large binary payloads; only summary info is sent via `tool_result` plus `span` timings.
 
 ## TypeScript
 
