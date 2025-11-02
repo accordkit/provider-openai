@@ -34,10 +34,10 @@
     "dev": "tsup --watch --clean=false",
     "clean": "rimraf dist",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run --reporter=dot",
+    "test": "vitest run --coverage",
     "test:watch": "vitest",
     "docs": "typedoc --options typedoc.json",
-    "lint": "eslint . --ext .ts",
+    "lint": "eslint . --max-warnings=0",
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write ."
   },
