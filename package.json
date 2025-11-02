@@ -11,7 +11,8 @@
   "homepage": "https://github.com/accordkit/provider-openai/tree/main?tab=readme-ov-file",
   "license": "MIT",
   "type": "module",
-  "main": "dist/index.js",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
@@ -29,7 +30,7 @@
   },
   "sideEffects": false,
   "scripts": {
-    "build": "tsup",
+    "build": "tsup src/index.ts --format esm,cjs --dts",
     "dev": "tsup --watch --clean=false",
     "clean": "rimraf dist",
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -44,11 +45,9 @@
     "openai": "^4 || ^5"
   },
   "dependencies": {
-    "@accordkit/tracer": "workspace:*"
+    "@accordkit/tracer": "^0.2.0"
   },
   "devDependencies": {
-    "openai": "^4.0.0",
-    "tsup": "^8.1.0",
     "@types/node": "^24.8.0",
     "@typescript-eslint/eslint-plugin": "^8.46.0",
     "@typescript-eslint/parser": "^8.46.0",
@@ -58,8 +57,10 @@
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-unused-imports": "^4.2.0",
     "globals": "^16.4.0",
+    "openai": "^4.0.0",
     "prettier": "^3.6.2",
     "rimraf": "^6.0.0",
+    "tsup": "^8.1.0",
     "typedoc": "^0.28.14",
     "typedoc-plugin-markdown": "^4.9.0",
     "typescript": "^5.9.3",
