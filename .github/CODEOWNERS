@@ -1,1 +1,18 @@
+# AccordKit Provider OpenAI
+# Adapter for OpenAI-compatible APIs
+
+# Default owner for all files
 * @faranjit
+
+# Core source code
+/src/ @faranjit
+
+# Tests
+/tests/ @faranjit
+
+# Documentation / Typedoc config
+/typedoc.json @faranjit
+/docs/ @faranjit
+
+# CI/CD configs
+/.github/workflows/ @faranjit
