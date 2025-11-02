@@ -1,13 +1,22 @@
-# @accordkit/provider-openai
+<p align="center">
+  <img src="https://docs.accordkit.dev/img/logo.png" height="80">
+</p>
+
+<h1 align="center">AccordKit - Provider OpenAI</h1>
+
+<p align="center">
+  AccordKit OpenAI Provider, a lightweight adapter that adds tracing to your OpenAI SDK calls.
+  <br />
+  <a href="https://docs.accordkit.dev"><strong>📘 Read the docs</strong></a>
+</p>
+
+---
 
 [![Part of AccordKit](https://img.shields.io/badge/AccordKit-ecosystem-00cc88?style=flat-square)](https://github.com/accordkit)
 
-> **Part of the [AccordKit](https://github.com/accordkit) ecosystem** —  
+> **Part of the [AccordKit](https://github.com/accordkit) ecosystem**  
 > an open, AI-agnostic tracing SDK for LLM-powered and ChatGPT-interoperable applications.  
 > AccordKit gives developers local-first observability: **no vendor lock-in, no opaque dashboards**, just clean event streams and tools that work anywhere.
-
-[🌍 Positioning Map →](https://github.com/accordkit/docs/blob/main/assets/accordkit_positioning_map.png)
-
 
 > AccordKit adapter that instruments the official OpenAI SDK and emits normalized
 > tracing events (`message`, `tool_call`, `usage`, `tool_result`, `span`) through

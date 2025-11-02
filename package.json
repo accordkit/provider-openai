@@ -35,7 +35,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --reporter=dot",
     "test:watch": "vitest",
-    "docs": "typedoc --out docs/api src",
+    "docs": "typedoc --out docs src",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write ."
@@ -61,7 +61,7 @@
     "prettier": "^3.6.2",
     "rimraf": "^6.0.0",
     "typedoc": "^0.28.14",
-    "typescript": "^5.5.0",
+    "typescript": "^5.9.3",
     "vitest": "^3.2.0"
   }
 }
